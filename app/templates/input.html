@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head><title>AI Shopping Assistant</title></head>
+<body>
+    <h2>AI Shopping Assistant</h2>
+    <p>Paste a product URL below to analyse it.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p style="color:red">{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+        <input type="text" name="url" placeholder="Paste product URL here" style="width:400px" required><br><br>
+        <button type="submit">Analyse Product</button>
+    </form>
+
+    {% if product %}
+    <hr>
+    <h3>Product Detected!</h3>
+    <p><b>Site:</b> {{ product.site }}</p>
+    <p><b>Product Name:</b> {{ product.product_name }}</p>
+    <p><b>Clean Name:</b> {{ product.clean_name }}</p>
+    <p><b>URL:</b> {{ product.url }}</p>
+    {% endif %}
+
+    <br>
+    <a href="/logout">Logout</a>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head><title>Select Scraping Mode</title></head>
+<body>
+    <h2>Product: {{ product_name }}</h2>
+    <h3>Choose Scraping Mode</h3>
+
+    <form method="POST">
+        <input type="hidden" name="product_name" value="{{ product_name }}">
+
+        <h4>Mode:</h4>
+        <input type="radio" name="mode" value="specific" onclick="showSpecific()" required> Specific Website<br><br>
+        <input type="radio" name="mode" value="all" onclick="hideAll()"> All Websites<br><br>
+        <input type="radio" name="mode" value="custom" onclick="showCustom()"> Custom Selection<br><br>
+
+        <div id="specific_div" style="display:none">
+            <h4>Select One Site:</h4>
+            <select name="specific_site">
+                <option value="amazon">Amazon</option>
+                <option value="flipkart">Flipkart</option>
+                <option value="meesho">Meesho</option>
+                <option value="snapdeal">Snapdeal</option>
+            </select>
+        </div>
+
+        <div id="custom_div" style="display:none">
+            <h4>Select Sites:</h4>
+            <input type="checkbox" name="sites" value="amazon"> Amazon<br>
+            <input type="checkbox" name="sites" value="flipkart"> Flipkart<br>
+            <input type="checkbox" name="sites" value="meesho"> Meesho<br>
+            <input type="checkbox" name="sites" value="snapdeal"> Snapdeal<br><br>
+            <h4>Max Reviews Per Site:</h4>
+            <select name="review_limit">
+                <option value="25">25 reviews</option>
+                <option value="50">50 reviews</option>
+                <option value="100">100 reviews</option>
+            </select>
+        </div>
+
+        <br>
+        <button type="submit">Start Scraping</button>
+    </form>
+
+    <script>
+        function showSpecific() {
+            document.getElementById('specific_div').style.display = 'block';
+            document.getElementById('custom_div').style.display = 'none';
+        }
+        function hideAll() {
+            document.getElementById('specific_div').style.display = 'none';
+            document.getElementById('custom_div').style.display = 'none';
+        }
+        function showCustom() {
+            document.getElementById('specific_div').style.display = 'none';
+            document.getElementById('custom_div').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

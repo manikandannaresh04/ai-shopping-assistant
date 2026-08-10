@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Scrape Results</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        .site-card { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .site-card h3 { color: #1a73e8; }
+        .not-available { background: #f5f5f5; color: #888; }
+        .review-text { font-size: 14px; color: #333; line-height: 1.5; }
+        .price { font-size: 18px; color: #2e7d32; font-weight: bold; }
+        .rating { color: #f57c00; }
+    </style>
+</head>
+<body>
+    <h2>Scraped Results for: {{ product_name }}</h2>
+
+    {% for result in results %}
+    <div class="site-card {% if not result.available %}not-available{% endif %}">
+        <h3>{{ result.site }}</h3>
+
+        {% if result.available %}
+            <p class="price">Price: {{ result.price }}</p>
+            <p class="rating"><b>Rating:</b> {{ result.rating }}</p>
+            <p><b>Reviews collected:</b> {{ result.reviews|length }}</p>
+            <ul>
+                {% for review in result.reviews[:3] %}
+                <li class="review-text">
+                    {{ review[:200] }}{% if review|length > 200 %}...{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p><b>Not Available</b> — {{ result.reason }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <br>
+    <a href="/input"><button>Search Another Product</button></a>
+    <a href="/logout">Logout</a>
+</body>
+</html>

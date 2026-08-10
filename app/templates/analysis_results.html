@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Analysis Results</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
+        h2 { color: #1a73e8; }
+        .site-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .site-card h3 { color: #333; margin-top: 0; }
+        .not-available { background: #f5f5f5; color: #888; }
+        .price { font-size: 20px; color: #2e7d32; font-weight: bold; }
+        .rating { color: #f57c00; }
+        .sentiment-positive { color: #2e7d32; font-weight: bold; }
+        .sentiment-negative { color: #c62828; font-weight: bold; }
+        .sentiment-neutral { color: #f57c00; font-weight: bold; }
+        .score-bar {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .score-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(to right, #ef5350, #66bb6a);
+        }
+        .pros { color: #2e7d32; }
+        .cons { color: #c62828; }
+        .fake-warning { color: #e65100; font-weight: bold; }
+        .review-text { font-size: 13px; color: #555; line-height: 1.5; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .info-box {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <h2>ML Analysis Results for: {{ product_name }}</h2>
+
+    {% for result in results %}
+    <div class="site-card {% if not result.available %}not-available{% endif %}">
+        <h3>{{ result.site }}</h3>
+
+        {% if result.available %}
+
+        <div class="info-grid">
+            <div class="info-box">
+                <p class="price">{{ result.price }}</p>
+                <p class="rating"><b>Rating:</b> {{ result.rating }}</p>
+                <p><b>Reviews analysed:</b> {{ result.reviews_count }}</p>
+            </div>
+            <div class="info-box">
+                <p><b>Sentiment Score:</b>
+                    <span class="sentiment-{{ result.overall_sentiment|lower }}">
+                        {{ result.sentiment_score }}/100 ({{ result.overall_sentiment }})
+                    </span>
+                </p>
+                <div class="score-bar">
+                    <div class="score-fill" style="width: {{ result.sentiment_score }}%"></div>
+                </div>
+                {% if result.fake_count > 0 %}
+                <p class="fake-warning">⚠ {{ result.fake_count }} suspicious review(s) detected</p>
+                {% else %}
+                <p style="color:#2e7d32">✓ No fake reviews detected</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if result.pros %}
+        <h4>✅ Pros:</h4>
+        <ul class="pros">
+            {% for pro in result.pros %}
+            <li>{{ pro[:150] }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if result.cons %}
+        <h4>❌ Cons:</h4>
+        <ul class="cons">
+            {% for con in result.cons %}
+            <li>{{ con[:150] }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if result.reviews %}
+        <h4>Sample Reviews:</h4>
+        <ul>
+            {% for review in result.reviews %}
+            <li class="review-text">{{ review[:200] }}{% if review|length > 200 %}...{% endif %}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% else %}
+        <p><b>Not Available</b> — {{ result.reason }}</p>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+
+    <br>
+    <a href="/input"><button style="padding:10px 20px;background:#1a73e8;color:white;border:none;border-radius:6px;cursor:pointer;">Search Another Product</button></a>
+    <a href="/logout"><button style="padding:10px 20px;background:#e53935;color:white;border:none;border-radius:6px;cursor:pointer;margin-left:10px;">Logout</button></a>
+</body>
+</html>
