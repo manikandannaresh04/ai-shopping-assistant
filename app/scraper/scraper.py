@@ -195,6 +195,7 @@ def scrape_amazon(product_name, review_limit=50):
         price = 'N/A'
         rating = 'N/A'
         asin = None
+        real_title = None
 
         if search_data.get('data') and search_data['data'].get('products'):
             products = search_data['data']['products']
@@ -204,11 +205,14 @@ def scrape_amazon(product_name, review_limit=50):
                 asin = best_product.get('asin')
                 price_val = best_product.get('product_price', 'N/A')
                 rating_val = best_product.get('product_star_rating', 'N/A')
+                real_title = best_product.get('product_title', '')
+
                 if price_val and price_val != 'N/A':
                     price = price_val
                 if rating_val and rating_val != 'N/A':
                     rating = f"{rating_val} out of 5"
-                print(f"Best match: {best_product.get('product_title', '')[:60]}")
+
+                print(f"Best match: {real_title[:60]}")
                 print(f"Price: {price}")
 
         real_reviews = []
@@ -248,6 +252,7 @@ def scrape_amazon(product_name, review_limit=50):
         return {
             'site': 'Amazon',
             'product_name': product_name,
+            'real_title': real_title,
             'price': price,
             'rating': rating,
             'reviews': real_reviews[:review_limit],
@@ -259,6 +264,7 @@ def scrape_amazon(product_name, review_limit=50):
         return {
             'site': 'Amazon',
             'product_name': product_name,
+            'real_title': None,
             'price': get_dynamic_price(product_name, 'amazon'),
             'rating': get_dynamic_rating(product_name, 'amazon'),
             'reviews': [

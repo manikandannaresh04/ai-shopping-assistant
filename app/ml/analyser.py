@@ -4,7 +4,6 @@ import numpy as np
 import re
 import nltk
 
-# Download required NLTK data
 try:
     nltk.download('punkt', quiet=True)
     nltk.download('stopwords', quiet=True)
@@ -59,7 +58,6 @@ def analyse_sentiment(reviews):
     else:
         overall = 'Neutral'
 
-    # Convert polarity (-1 to 1) to score (0 to 100)
     score = round((avg_polarity + 1) / 2 * 100, 1)
 
     return {
@@ -107,6 +105,20 @@ def extract_pros_cons(reviews, sentiment_results):
     pros = []
     cons = []
 
+    # Strong positive words
+    positive_keywords = [
+        'excellent', 'amazing', 'great', 'good', 'love', 'best',
+        'perfect', 'fantastic', 'awesome', 'superb', 'wonderful',
+        'satisfied', 'happy', 'recommend', 'quality', 'fast'
+    ]
+
+    # Strong negative words
+    negative_keywords = [
+        'bad', 'poor', 'terrible', 'worst', 'disappoint', 'issue',
+        'problem', 'broke', 'broken', 'slow', 'expensive', 'waste',
+        'return', 'refund', 'damage', 'fake', 'stop', 'fail'
+    ]
+
     for i, result in enumerate(sentiment_results):
         if i >= len(reviews):
             break
@@ -116,16 +128,26 @@ def extract_pros_cons(reviews, sentiment_results):
 
         for sentence in sentences:
             sentence = sentence.strip()
-            if len(sentence) < 10:
+            if len(sentence) < 15:
                 continue
 
+            sentence_lower = sentence.lower()
             blob = TextBlob(sentence)
             polarity = blob.sentiment.polarity
 
-            if polarity > 0.2 and len(pros) < 5:
-                pros.append(sentence)
-            elif polarity < -0.1 and len(cons) < 5:
-                cons.append(sentence)
+            # Check for negative keywords — must have negative word AND negative polarity
+            has_negative_word = any(word in sentence_lower for word in negative_keywords)
+            has_positive_word = any(word in sentence_lower for word in positive_keywords)
+
+            # Pro: positive polarity AND positive keywords
+            if polarity > 0.2 and has_positive_word and len(pros) < 5:
+                if sentence not in pros:
+                    pros.append(sentence)
+
+            # Con: negative polarity AND negative keywords (strict check)
+            elif polarity < -0.1 and has_negative_word and not has_positive_word and len(cons) < 5:
+                if sentence not in cons:
+                    cons.append(sentence)
 
     if not pros:
         pros = ['Good product overall', 'Reasonable quality for the price']
@@ -139,7 +161,6 @@ def analyse_reviews(scraped_results):
     analysed = []
 
     for site_data in scraped_results:
-        # Skip unavailable sites
         if not site_data.get('available', True):
             analysed.append({
                 **site_data,
@@ -166,14 +187,9 @@ def analyse_reviews(scraped_results):
             })
             continue
 
-        # Run Sentiment Analysis
         sentiment_data = analyse_sentiment(reviews)
-
-        # Run Fake Review Detection
         fake_flags = detect_fake_reviews(reviews)
         fake_count = sum(fake_flags)
-
-        # Extract Pros and Cons
         pros, cons = extract_pros_cons(reviews, sentiment_data['results'])
 
         analysed.append({

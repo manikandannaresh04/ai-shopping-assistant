@@ -1,58 +1,210 @@
 <!DOCTYPE html>
 <html>
-<head><title>Select Scraping Mode</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Select Analysis Mode</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
+
+        .navbar {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h1 { color: white; font-size: 20px; }
+        .navbar a { color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; font-size: 14px; }
+
+        .container { max-width: 700px; margin: 40px auto; padding: 0 20px; }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .product-banner {
+            background: linear-gradient(135deg, #e8f4fd, #bbdefb);
+            border-left: 4px solid #1a73e8;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        .product-banner p { color: #1a73e8; font-size: 14px; }
+        .product-banner h3 { color: #0d47a1; font-size: 18px; margin-top: 5px; }
+
+        h2 { color: #333; margin-bottom: 20px; font-size: 22px; }
+
+        .mode-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .mode-btn {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        .mode-btn:hover { border-color: #1a73e8; background: #e8f4fd; }
+        .mode-btn input[type=radio] { display: none; }
+        .mode-btn .icon { font-size: 30px; margin-bottom: 8px; }
+        .mode-btn .title { font-weight: bold; color: #333; font-size: 14px; }
+        .mode-btn .desc { color: #666; font-size: 12px; margin-top: 4px; }
+        .mode-btn.selected { border-color: #1a73e8; background: #e8f4fd; }
+
+        .section { margin-top: 20px; display: none; }
+        .section.visible { display: block; }
+
+        select, .review-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            margin-top: 8px;
+        }
+
+        .checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .checkbox-item:hover { border-color: #1a73e8; }
+        .checkbox-item input { width: 18px; height: 18px; }
+        .checkbox-item label { cursor: pointer; font-size: 15px; }
+
+        .btn-analyse {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 25px;
+        }
+        .btn-analyse:hover { opacity: 0.9; }
+
+        .back-link { text-align: center; margin-top: 15px; }
+        .back-link a { color: #1a73e8; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
 <body>
-    <h2>Product: {{ product_name }}</h2>
-    <h3>Choose Scraping Mode</h3>
 
-    <form method="POST">
-        <input type="hidden" name="product_name" value="{{ product_name }}">
+    <div class="navbar">
+        <h1>🛒 AI Shopping Assistant</h1>
+        <a href="/logout">Logout</a>
+    </div>
 
-        <h4>Mode:</h4>
-        <input type="radio" name="mode" value="specific" onclick="showSpecific()" required> Specific Website<br><br>
-        <input type="radio" name="mode" value="all" onclick="hideAll()"> All Websites<br><br>
-        <input type="radio" name="mode" value="custom" onclick="showCustom()"> Custom Selection<br><br>
+    <div class="container">
+        <div class="card">
+            <div class="product-banner">
+                <p>Analysing product:</p>
+                <h3>{{ product_name }}</h3>
+            </div>
 
-        <div id="specific_div" style="display:none">
-            <h4>Select One Site:</h4>
-            <select name="specific_site">
-                <option value="amazon">Amazon</option>
-                <option value="flipkart">Flipkart</option>
-                <option value="meesho">Meesho</option>
-                <option value="snapdeal">Snapdeal</option>
-            </select>
+            <h2>Choose Analysis Mode</h2>
+
+            <form method="POST" id="mainForm">
+                <!-- Mode Selection -->
+                <div class="mode-options">
+                    <div class="mode-btn" onclick="selectMode('specific', this)">
+                        <input type="radio" name="mode" value="specific">
+                        <div class="icon">🎯</div>
+                        <div class="title">Specific Site</div>
+                        <div class="desc">Analyse one platform only</div>
+                    </div>
+                    <div class="mode-btn" onclick="selectMode('all', this)">
+                        <input type="radio" name="mode" value="all">
+                        <div class="icon">🌐</div>
+                        <div class="title">All Websites</div>
+                        <div class="desc">Compare all platforms</div>
+                    </div>
+                    <div class="mode-btn" onclick="selectMode('custom', this)">
+                        <input type="radio" name="mode" value="custom">
+                        <div class="icon">⚙️</div>
+                        <div class="title">Custom Select</div>
+                        <div class="desc">Choose sites + review limit</div>
+                    </div>
+                </div>
+
+                <!-- Specific Site Dropdown -->
+                <div id="specific_div" class="section">
+                    <label><b>Select Site:</b></label>
+                    <select name="specific_site">
+                        <option value="amazon">Amazon</option>
+                        <option value="flipkart">Flipkart</option>
+                        <option value="meesho">Meesho</option>
+                        <option value="snapdeal">Snapdeal</option>
+                    </select>
+                </div>
+
+                <!-- Custom Selection -->
+                <div id="custom_div" class="section">
+                    <label><b>Select Sites:</b></label>
+                    <div class="checkbox-grid">
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sites" value="amazon" id="ch_amazon">
+                            <label for="ch_amazon">🛍 Amazon</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sites" value="flipkart" id="ch_flipkart">
+                            <label for="ch_flipkart">🛒 Flipkart</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sites" value="meesho" id="ch_meesho">
+                            <label for="ch_meesho">🏷 Meesho</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="sites" value="snapdeal" id="ch_snapdeal">
+                            <label for="ch_snapdeal">🔖 Snapdeal</label>
+                        </div>
+                    </div>
+                    <label style="margin-top:15px; display:block;"><b>Max Reviews Per Site:</b></label>
+                    <select name="review_limit" class="review-select">
+                        <option value="25">25 reviews (Fast)</option>
+                        <option value="50" selected>50 reviews (Recommended)</option>
+                        <option value="100">100 reviews (Deep Analysis)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-analyse">🔍 Start Analysis</button>
+            </form>
+
+            <div class="back-link">
+                <a href="/input">← Search a different product</a>
+            </div>
         </div>
-
-        <div id="custom_div" style="display:none">
-            <h4>Select Sites:</h4>
-            <input type="checkbox" name="sites" value="amazon"> Amazon<br>
-            <input type="checkbox" name="sites" value="flipkart"> Flipkart<br>
-            <input type="checkbox" name="sites" value="meesho"> Meesho<br>
-            <input type="checkbox" name="sites" value="snapdeal"> Snapdeal<br><br>
-            <h4>Max Reviews Per Site:</h4>
-            <select name="review_limit">
-                <option value="25">25 reviews</option>
-                <option value="50">50 reviews</option>
-                <option value="100">100 reviews</option>
-            </select>
-        </div>
-
-        <br>
-        <button type="submit">Start Scraping</button>
-    </form>
+    </div>
 
     <script>
-        function showSpecific() {
-            document.getElementById('specific_div').style.display = 'block';
-            document.getElementById('custom_div').style.display = 'none';
-        }
-        function hideAll() {
-            document.getElementById('specific_div').style.display = 'none';
-            document.getElementById('custom_div').style.display = 'none';
-        }
-        function showCustom() {
-            document.getElementById('specific_div').style.display = 'none';
-            document.getElementById('custom_div').style.display = 'block';
+        function selectMode(mode, el) {
+            // Update radio
+            document.querySelector('input[value="' + mode + '"]').checked = true;
+
+            // Update button styles
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('selected'));
+            el.classList.add('selected');
+
+            // Show/hide sections
+            document.getElementById('specific_div').classList.remove('visible');
+            document.getElementById('custom_div').classList.remove('visible');
+
+            if (mode === 'specific') {
+                document.getElementById('specific_div').classList.add('visible');
+            } else if (mode === 'custom') {
+                document.getElementById('custom_div').classList.add('visible');
+            }
         }
     </script>
 </body>

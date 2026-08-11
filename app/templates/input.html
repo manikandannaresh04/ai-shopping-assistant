@@ -1,31 +1,55 @@
 <!DOCTYPE html>
 <html>
-<head><title>AI Shopping Assistant</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>AI Shopping Assistant</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+        h2 { color: #1a73e8; }
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 700px; }
+        input[type=text] { width: 100%; padding: 12px; font-size: 15px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; }
+        button { padding: 12px 30px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; }
+        button:hover { background: #1558b0; }
+        .tip { background: #e8f4fd; border-left: 4px solid #1a73e8; padding: 12px 15px; border-radius: 4px; margin-top: 20px; font-size: 13px; }
+        .tip b { color: #1a73e8; }
+        .warning { background: #fff3e0; border-left: 4px solid #f57c00; padding: 12px 15px; border-radius: 4px; margin-top: 10px; font-size: 13px; }
+        .error { color: red; margin-bottom: 10px; }
+    </style>
+</head>
 <body>
-    <h2>AI Shopping Assistant</h2>
-    <p>Paste a product URL below to analyse it.</p>
+    <div class="card">
+        <h2>AI Shopping Assistant</h2>
+        <p>Paste a product URL below to analyse price, reviews and get a recommendation.</p>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p style="color:red">{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <p class="error">{{ message }}</p>
+            {% endfor %}
+        {% endwith %}
 
-    <form method="POST">
-        <input type="text" name="url" placeholder="Paste product URL here" style="width:400px" required><br><br>
-        <button type="submit">Analyse Product</button>
-    </form>
+        <form method="POST">
+            <input type="text" name="url" placeholder="Paste product URL here e.g. https://www.amazon.in/..." required>
+            <button type="submit">Analyse Product</button>
+        </form>
 
-    {% if product %}
-    <hr>
-    <h3>Product Detected!</h3>
-    <p><b>Site:</b> {{ product.site }}</p>
-    <p><b>Product Name:</b> {{ product.product_name }}</p>
-    <p><b>Clean Name:</b> {{ product.clean_name }}</p>
-    <p><b>URL:</b> {{ product.url }}</p>
-    {% endif %}
+        <div class="tip">
+            <b>Supported sites:</b> Amazon, Flipkart, Meesho, Snapdeal<br><br>
+            <b>How to get the correct URL:</b><br>
+            1. Open the product page in your browser<br>
+            2. Copy the full URL from the address bar at the top<br>
+            3. Paste it here<br><br>
+            <b>Example URLs:</b><br>
+            ✅ https://www.amazon.in/Samsung-Galaxy-S24/dp/B0CS4YNFPP<br>
+            ✅ https://www.flipkart.com/samsung-galaxy-s24/p/itm123<br>
+        </div>
 
-    <br>
-    <a href="/logout">Logout</a>
+        <div class="warning">
+            ⚠ <b>Short URLs like amzn.in/... are not supported.</b><br>
+            Please copy the full URL from your browser address bar instead.
+        </div>
+
+        <br>
+        <a href="/logout" style="color:#e53935;">Logout</a>
+    </div>
 </body>
 </html>

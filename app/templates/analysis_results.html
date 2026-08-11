@@ -6,59 +6,107 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
         h2 { color: #1a73e8; }
-        .site-card {
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 10px;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+        /* Recommendation Card */
+        .recommendation-card {
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
+        .verdict-emoji { font-size: 60px; margin-bottom: 10px; }
+        .verdict-text { font-size: 36px; font-weight: bold; margin-bottom: 10px; }
+        .verdict-message { font-size: 16px; margin-bottom: 15px; }
+        .best-site { font-size: 18px; font-weight: bold; background: rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; display: inline-block; }
+        .overall-score { font-size: 20px; margin-top: 10px; }
+
+        /* Score Table */
+        .score-table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .score-table th { background: #1a73e8; color: white; padding: 12px; text-align: center; }
+        .score-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid #eee; }
+        .score-table tr:last-child td { border-bottom: none; }
+        .best-row { background: #e8f5e9 !important; font-weight: bold; }
+
+        /* Site Cards */
+        .site-card { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 10px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .site-card h3 { color: #333; margin-top: 0; }
+        .best-site-card { border: 2px solid #2e7d32; }
         .not-available { background: #f5f5f5; color: #888; }
         .price { font-size: 20px; color: #2e7d32; font-weight: bold; }
         .rating { color: #f57c00; }
         .sentiment-positive { color: #2e7d32; font-weight: bold; }
         .sentiment-negative { color: #c62828; font-weight: bold; }
         .sentiment-neutral { color: #f57c00; font-weight: bold; }
-        .score-bar {
-            height: 20px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
-        .score-fill {
-            height: 100%;
-            border-radius: 10px;
-            background: linear-gradient(to right, #ef5350, #66bb6a);
-        }
+        .score-bar { height: 20px; background: #e0e0e0; border-radius: 10px; margin: 10px 0; overflow: hidden; }
+        .score-fill { height: 100%; border-radius: 10px; background: linear-gradient(to right, #ef5350, #66bb6a); }
         .pros { color: #2e7d32; }
         .cons { color: #c62828; }
         .fake-warning { color: #e65100; font-weight: bold; }
         .review-text { font-size: 13px; color: #555; line-height: 1.5; }
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin: 10px 0;
-        }
-        .info-box {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 6px;
-        }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+        .info-box { background: #f5f5f5; padding: 10px; border-radius: 6px; }
+        .badge { background: #2e7d32; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; color: white; text-decoration: none; display: inline-block; margin: 5px; }
+        .btn-blue { background: #1a73e8; }
+        .btn-red { background: #e53935; }
     </style>
 </head>
 <body>
     <h2>ML Analysis Results for: {{ product_name }}</h2>
 
+    <!-- ── RECOMMENDATION CARD ─────────────────────── -->
+    {% if recommendation %}
+    <div class="recommendation-card" style="background: {{ recommendation.color }}; color: white;">
+        <div class="verdict-emoji">{{ recommendation.emoji }}</div>
+        <div class="verdict-text">{{ recommendation.verdict }}</div>
+        <div class="verdict-message">{{ recommendation.message }}</div>
+        <div class="overall-score">Overall Score: {{ recommendation.overall_score }}/100</div>
+        {% if recommendation.best_site %}
+        <div class="best-site">Best site to buy: {{ recommendation.best_site }}</div>
+        {% endif %}
+    </div>
+
+    <!-- ── SCORE COMPARISON TABLE ─────────────────── -->
+    {% if recommendation.site_scores %}
+    <h3>Site Score Comparison</h3>
+    <table class="score-table">
+        <tr>
+            <th>Site</th>
+            <th>Sentiment (40%)</th>
+            <th>Authenticity (20%)</th>
+            <th>Price (40%)</th>
+            <th>Total Score</th>
+        </tr>
+        {% for site, breakdown in recommendation.site_breakdown.items() %}
+        <tr {% if site == recommendation.best_site %}class="best-row"{% endif %}>
+            <td>
+                {{ site }}
+                {% if site == recommendation.best_site %}
+                <span class="badge">Best Deal</span>
+                {% endif %}
+            </td>
+            <td>{{ breakdown.sentiment_contribution }}</td>
+            <td>{{ breakdown.authenticity_contribution }}</td>
+            <td>{{ breakdown.price_contribution }}</td>
+            <td><b>{{ breakdown.total }}</b></td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    {% endif %}
+
+    <!-- ── SITE CARDS ─────────────────────────────── -->
     {% for result in results %}
-    <div class="site-card {% if not result.available %}not-available{% endif %}">
-        <h3>{{ result.site }}</h3>
+    <div class="site-card {% if not result.available %}not-available{% endif %} {% if recommendation and result.site == recommendation.best_site %}best-site-card{% endif %}">
+        <h3>
+            {{ result.site }}
+            {% if recommendation and result.site == recommendation.best_site %}
+            <span class="badge">⭐ Best Deal</span>
+            {% endif %}
+        </h3>
 
         {% if result.available %}
-
         <div class="info-grid">
             <div class="info-box">
                 <p class="price">{{ result.price }}</p>
@@ -112,12 +160,11 @@
         {% else %}
         <p><b>Not Available</b> — {{ result.reason }}</p>
         {% endif %}
-
     </div>
     {% endfor %}
 
     <br>
-    <a href="/input"><button style="padding:10px 20px;background:#1a73e8;color:white;border:none;border-radius:6px;cursor:pointer;">Search Another Product</button></a>
-    <a href="/logout"><button style="padding:10px 20px;background:#e53935;color:white;border:none;border-radius:6px;cursor:pointer;margin-left:10px;">Logout</button></a>
+    <a href="/input" class="btn btn-blue">Search Another Product</a>
+    <a href="/logout" class="btn btn-red">Logout</a>
 </body>
 </html>

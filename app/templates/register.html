@@ -1,19 +1,83 @@
 <!DOCTYPE html>
 <html>
-<head><title>Register</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Register - AI Shopping Assistant</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        .logo { text-align: center; margin-bottom: 30px; }
+        .logo h1 { color: #1a73e8; font-size: 28px; }
+        .logo p { color: #666; font-size: 14px; margin-top: 5px; }
+        label { display: block; font-size: 14px; color: #333; margin-bottom: 6px; font-weight: 600; }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus { border-color: #1a73e8; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn:hover { opacity: 0.9; }
+        .success { color: #2e7d32; background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
+        .link { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
+        .link a { color: #1a73e8; text-decoration: none; font-weight: 600; }
+    </style>
+</head>
 <body>
-    <h2>Create Account</h2>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p style="color:green">{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
-    <form method="POST">
-        <input type="text" name="username" placeholder="Username" required><br><br>
-        <input type="email" name="email" placeholder="Email" required><br><br>
-        <input type="password" name="password" placeholder="Password" required><br><br>
-        <button type="submit">Register</button>
-    </form>
-    <p>Already have an account? <a href="/login">Login</a></p>
+    <div class="card">
+        <div class="logo">
+            <h1>🛒 AI Shopping</h1>
+            <p>Create your account</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <p class="success">{{ message }}</p>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Enter your username" required>
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="Enter your email" required>
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Create a password" required>
+            <button type="submit" class="btn">Create Account</button>
+        </form>
+
+        <div class="link">
+            Already have an account? <a href="/login">Login here</a>
+        </div>
+    </div>
 </body>
 </html>

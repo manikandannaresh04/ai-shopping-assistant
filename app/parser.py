@@ -1,21 +1,34 @@
 import re
 import requests
 from urllib.parse import urlparse, parse_qs
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-def expand_url(url):
+RAPIDAPI_KEY = "aa264be408msheba6d94cf2cca2fp14cf61jsnfddb3e20add6"
+RAPIDAPI_HOST = "real-time-amazon-data.p.rapidapi.com"
+
+RAPIDAPI_HEADERS = {
+    "x-rapidapi-key": RAPIDAPI_KEY,
+    "x-rapidapi-host": RAPIDAPI_HOST
+}
+
+def get_title_from_asin(asin):
     try:
-        response = requests.get(url, allow_redirects=True, timeout=10, headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
-        return response.url
+        url = "https://real-time-amazon-data.p.rapidapi.com/product-details"
+        params = {"asin": asin, "country": "IN"}
+        response = requests.get(url, headers=RAPIDAPI_HEADERS, params=params, timeout=10)
+        data = response.json()
+        if data.get('data') and data['data'].get('product_title'):
+            title = data['data']['product_title']
+            return clean_product_name(title)
     except:
-        return url
+        pass
+    return None
+
+def is_asin(text):
+    return bool(re.match(r'^[A-Z0-9]{10}$', text.upper().strip()))
 
 def extract_product_info(url):
-    # Expand short URLs
-    if any(x in url for x in ['amzn.in', 'amzn.to', 'fkrt.it']):
-        url = expand_url(url)
-
     parsed = urlparse(url)
     domain = parsed.netloc.lower()
     path = parsed.path
@@ -28,26 +41,41 @@ def extract_product_info(url):
         'clean_name': None
     }
 
+    # ── REJECT SHORT URLS ────────────────────────────────
+    if 'amzn.in' in domain or 'amzn.to' in domain or 'fkrt.it' in domain:
+        product_info['site'] = 'unknown'
+        product_info['product_name'] = None
+        product_info['clean_name'] = None
+        return product_info
+
     # ── AMAZON ──────────────────────────────────────────
-    if 'amazon' in domain:
+    elif 'amazon' in domain:
         product_info['site'] = 'amazon'
 
-        # Direct product URL: /product-name/dp/ASIN
-        match = re.search(r'/([a-zA-Z0-9\-]+)/dp/', url)
-        if match:
-            name = match.group(1).replace('-', ' ')
+        asin_match = re.search(r'/dp/([A-Z0-9]{10})', url)
+        asin = asin_match.group(1) if asin_match else None
+
+        name_match = re.search(r'/([a-zA-Z0-9\-]+)/dp/', url)
+        name_part = name_match.group(1) if name_match else ''
+
+        if name_part and not is_asin(name_part) and len(name_part) > 5 and '-' in name_part:
+            name = name_part.replace('-', ' ')
             product_info['product_name'] = name
             product_info['clean_name'] = clean_product_name(name)
-
-        # Search URL: /s?k=product+name
+        elif asin:
+            real_title = get_title_from_asin(asin)
+            if real_title:
+                product_info['product_name'] = real_title
+                product_info['clean_name'] = real_title
+            else:
+                product_info['product_name'] = asin
+                product_info['clean_name'] = asin
         elif query.get('k') or query.get('field-keywords'):
             search_query = query.get('k', query.get('field-keywords', ['']))[0]
             if search_query:
                 name = search_query.replace('+', ' ')
                 product_info['product_name'] = name
                 product_info['clean_name'] = clean_product_name(name)
-
-        # Fallback - extract from path
         else:
             parts = [p for p in path.split('/') if p and len(p) > 3]
             if parts:
@@ -59,15 +87,12 @@ def extract_product_info(url):
     elif 'flipkart' in domain:
         product_info['site'] = 'flipkart'
 
-        # Search URL: /search?q=product+name
         if query.get('q'):
             search_query = query.get('q', [''])[0]
             if search_query:
                 name = search_query.replace('+', ' ')
                 product_info['product_name'] = name
                 product_info['clean_name'] = clean_product_name(name)
-
-        # Direct product URL: /product-name/p/itemid
         else:
             parts = [p for p in path.split('/') if p and p != 'p']
             if parts:
@@ -96,7 +121,7 @@ def extract_product_info(url):
     else:
         product_info['site'] = 'unknown'
 
-    # Safety check - if no product name found set default
+    # Safety check
     if not product_info['product_name'] or len(product_info['product_name'].strip()) < 2:
         product_info['product_name'] = 'product'
         product_info['clean_name'] = 'product'
