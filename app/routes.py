@@ -100,6 +100,7 @@ def scrape_mode():
         # Store in session
         session_data = []
         for r in analysed_results:
+            reviews_list = r.get('reviews', [])
             session_data.append({
                 'site': r.get('site'),
                 'price': r.get('price'),
@@ -109,10 +110,10 @@ def scrape_mode():
                 'sentiment_score': r.get('sentiment_score', 50),
                 'overall_sentiment': r.get('overall_sentiment', 'Neutral'),
                 'fake_count': r.get('fake_count', 0),
-                'reviews_count': len(r.get('reviews', [])),
+                'reviews_count': r.get('reviews_count', len(reviews_list)),
                 'pros': r.get('pros', [])[:3],
                 'cons': r.get('cons', [])[:3],
-                'reviews': r.get('reviews', [])[:3]
+                'reviews': reviews_list[:3]
             })
 
         session['analysed_results'] = session_data

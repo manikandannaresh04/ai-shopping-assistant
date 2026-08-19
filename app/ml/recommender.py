@@ -2,7 +2,9 @@ import re
 
 def extract_price_value(price_str):
     try:
-        numbers = re.findall(r'[\d]+', str(price_str).replace(',', ''))
+        # Remove all currency symbols and commas
+        cleaned = str(price_str).replace(',', '').replace('₹', '').replace('Rs.', '').replace('Rs', '').replace('$', '').strip()
+        numbers = re.findall(r'[\d]+', cleaned)
         if numbers:
             return int(numbers[0])
     except:
@@ -11,52 +13,39 @@ def extract_price_value(price_str):
 
 
 def get_recommendation_score(site_data):
-    """
-    Calculate weighted score for each site:
-    - Price Score: 40%
-    - Sentiment Score: 40%
-    - Review Authenticity: 20%
-    """
     scores = {}
 
-    # Sentiment Score (40%) - already 0 to 100
+    # Sentiment Score (40%)
     sentiment_score = float(site_data.get('sentiment_score', 50))
     sentiment_score = max(0, min(100, sentiment_score))
     scores['sentiment'] = sentiment_score * 0.4
 
-    # Fake Review Score (20%) - always positive 0 to 100
+    # Fake Review Score (20%)
     fake_count = int(site_data.get('fake_count', 0))
-    reviews_count = int(site_data.get('reviews_count', 1))
-    if reviews_count > 0 and fake_count >= 0:
-        fake_ratio = min(1.0, fake_count / reviews_count)
+    reviews_count = int(site_data.get('reviews_count', 0))
+    if reviews_count > 0:
+        fake_ratio = min(1.0, max(0, fake_count / reviews_count))
     else:
         fake_ratio = 0
     authenticity_score = max(0, (1 - fake_ratio) * 100)
     scores['authenticity'] = authenticity_score * 0.2
 
-    # Price raw value for comparison later
+    # Price raw value
     scores['price_raw'] = extract_price_value(site_data.get('price', '0'))
 
     return scores
 
 
 def calculate_price_scores(all_scores):
-    """
-    Compare prices across sites
-    Lower price = higher score
-    If only one site has price, give it full price score
-    """
     prices = [(site, s['price_raw']) for site, s in all_scores.items()
               if s['price_raw'] > 0]
 
     if not prices:
-        # No price data - give everyone 50% price score
         for site in all_scores:
             all_scores[site]['price'] = 50 * 0.4
         return all_scores
 
     if len(prices) == 1:
-        # Only one site has price - give it full price score
         site = prices[0][0]
         for s in all_scores:
             if s == site:
@@ -72,13 +61,10 @@ def calculate_price_scores(all_scores):
     for site, score in all_scores.items():
         price = score['price_raw']
         if price == 0:
-            # No price data - neutral score
             all_scores[site]['price'] = 50 * 0.4
         elif price_range == 0:
-            # All same price - full score
             all_scores[site]['price'] = 100 * 0.4
         else:
-            # Lower price = higher score
             price_score = ((max_price - price) / price_range) * 100
             price_score = max(0, min(100, price_score))
             all_scores[site]['price'] = price_score * 0.4
@@ -131,16 +117,13 @@ def generate_recommendation(analysed_results):
             'overall_score': 0
         }
 
-    # Calculate scores for each available site
     all_scores = {}
     for site_data in available_sites:
         site = site_data.get('site', 'Unknown')
         all_scores[site] = get_recommendation_score(site_data)
 
-    # Calculate price scores with comparison
     all_scores = calculate_price_scores(all_scores)
 
-    # Calculate total scores
     site_totals = {}
     site_breakdown = {}
     for site, scores in all_scores.items():
@@ -157,13 +140,8 @@ def generate_recommendation(analysed_results):
             'total': total
         }
 
-    # Overall score = average of all sites
     overall_score = round(sum(site_totals.values()) / len(site_totals), 1)
-
-    # Get verdict
     verdict_data = get_verdict(overall_score)
-
-    # Find best site
     best_site = get_best_site(site_totals)
 
     return {
