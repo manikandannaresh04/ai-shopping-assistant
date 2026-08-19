@@ -2,10 +2,12 @@ import re
 
 def extract_price_value(price_str):
     try:
-        # Remove all currency symbols and commas
-        cleaned = str(price_str).replace(',', '').replace('₹', '').replace('Rs.', '').replace('Rs', '').replace('$', '').strip()
-        numbers = re.findall(r'[\d]+', cleaned)
+        price_str = str(price_str)
+        # Remove ALL non-numeric characters except dots
+        # This handles ₹, Rs., Rs, $, commas, spaces etc.
+        numbers = re.findall(r'\d+', price_str.replace(',', ''))
         if numbers:
+            # Join first two numbers in case of decimal
             return int(numbers[0])
     except:
         pass
@@ -31,7 +33,9 @@ def get_recommendation_score(site_data):
     scores['authenticity'] = authenticity_score * 0.2
 
     # Price raw value
-    scores['price_raw'] = extract_price_value(site_data.get('price', '0'))
+    price_val = extract_price_value(site_data.get('price', '0'))
+    print(f"Site: {site_data.get('site')} | Price string: {site_data.get('price')} | Extracted: {price_val}")
+    scores['price_raw'] = price_val
 
     return scores
 
@@ -39,6 +43,8 @@ def get_recommendation_score(site_data):
 def calculate_price_scores(all_scores):
     prices = [(site, s['price_raw']) for site, s in all_scores.items()
               if s['price_raw'] > 0]
+
+    print(f"Prices found: {prices}")
 
     if not prices:
         for site in all_scores:
